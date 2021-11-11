@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mpanelo/gocookit/models"
@@ -31,14 +32,22 @@ func (u *Users) Create(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	user := models.User{
+	user := &models.User{
 		Name:     form.Name,
 		Email:    form.Email,
 		Password: form.Password,
 	}
 
-	err := u.us.Create(&user)
+	err := u.us.Create(user)
 	if err != nil {
-		panic(err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		return
 	}
+
+	user, err = u.us.ByEmail(form.Email)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		return
+	}
+	fmt.Fprintln(rw, user)
 }
