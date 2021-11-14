@@ -11,12 +11,14 @@ import (
 func NewUsers(us models.UserService) *Users {
 	return &Users{
 		SignUp: views.NewView("users/signup"),
+		SignIn: views.NewView("users/signin"),
 		us:     us,
 	}
 }
 
 type Users struct {
 	SignUp *views.View
+	SignIn *views.View
 	us     models.UserService
 }
 

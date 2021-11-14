@@ -31,6 +31,7 @@ func main() {
 	router.Handle("/", staticCT.Home)
 
 	router.Handle("/signup", usersCT.SignUp).Methods(http.MethodGet)
+	router.Handle("/signin", usersCT.SignIn).Methods(http.MethodGet)
 	router.HandleFunc("/users", usersCT.Create).Methods(http.MethodPost)
 
 	http.ListenAndServe(":8000", router)
