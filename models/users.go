@@ -48,7 +48,7 @@ func (uv *userValidator) ByEmail(email string) (*User, error) {
 	var user User
 	user.Email = email
 
-	err := runUserValidatorFuncs(&user, normalizeEmail)
+	err := runUserValidatorFuncs(&user, uv.normalizeEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +58,15 @@ func (uv *userValidator) ByEmail(email string) (*User, error) {
 
 func (uv *userValidator) Create(user *User) error {
 	err := runUserValidatorFuncs(user,
-		requirePassword,
-		passwordMinLength,
-		generatePasswordHash,
-		requirePasswordHash,
-		requireEmail,
-		normalizeEmail,
-		validateEmailFormat,
-		requireName)
+		uv.requirePassword,
+		uv.passwordMinLength,
+		uv.generatePasswordHash,
+		uv.requirePasswordHash,
+		uv.requireEmail,
+		uv.normalizeEmail,
+		uv.validateEmailFormat,
+		uv.emailIsAvail,
+		uv.requireName)
 	if err != nil {
 		return err
 	}
@@ -75,21 +76,21 @@ func (uv *userValidator) Create(user *User) error {
 
 type userValidatorFunc func(*User) error
 
-func requirePassword(user *User) error {
+func (uv *userValidator) requirePassword(user *User) error {
 	if user.Password == "" {
 		return ErrUserPasswordRequired
 	}
 	return nil
 }
 
-func passwordMinLength(user *User) error {
+func (uv *userValidator) passwordMinLength(user *User) error {
 	if len(user.Password) < 8 {
 		return ErrUserPasswordTooShort
 	}
 	return nil
 }
 
-func generatePasswordHash(user *User) error {
+func (uv *userValidator) generatePasswordHash(user *User) error {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password+sharedSecretPepper), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -99,34 +100,50 @@ func generatePasswordHash(user *User) error {
 	return nil
 }
 
-func requirePasswordHash(user *User) error {
+func (uv *userValidator) requirePasswordHash(user *User) error {
 	if user.PasswordHash == "" {
 		return ErrUserPasswordHashRequired
 	}
 	return nil
 }
 
-func requireEmail(user *User) error {
+func (uv *userValidator) requireEmail(user *User) error {
 	if user.Email == "" {
 		return ErrUserEmailRequired
 	}
 	return nil
 }
 
-func normalizeEmail(user *User) error {
+func (uv *userValidator) normalizeEmail(user *User) error {
 	user.Email = strings.ToLower(user.Email)
 	user.Email = strings.TrimSpace(user.Email)
 	return nil
 }
 
-func validateEmailFormat(user *User) error {
+func (uv *userValidator) validateEmailFormat(user *User) error {
 	if !emailRegex.MatchString(user.Email) {
 		return ErrUserEmailInvalid
 	}
 	return nil
 }
 
-func requireName(user *User) error {
+func (uv *userValidator) emailIsAvail(user *User) error {
+	foundUser, err := uv.UserDB.ByEmail(user.Email)
+	if err != nil {
+		if err == ErrNotFound {
+			return nil
+		}
+		return err
+	}
+
+	if foundUser.ID != user.ID {
+		return ErrUserEmailTaken
+	}
+
+	return nil
+}
+
+func (uv *userValidator) requireName(user *User) error {
 	if user.Name == "" {
 		return ErrUserNameRequired
 	}
@@ -148,27 +165,41 @@ type userGorm struct {
 }
 
 func (ug *userGorm) ByID(id uint) (*User, error) {
-	return first(ug.db.Where("id = ?", id))
-}
-
-func (ug *userGorm) ByEmail(email string) (*User, error) {
-	return first(ug.db.Where("email = ?", email))
-}
-
-func first(tx *gorm.DB) (*User, error) {
 	var user User
+	tx := ug.db.Where("id = ?", id)
 
-	err := tx.First(&user).Error
+	err := first(tx, &user)
 	if err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
-			return nil, ErrNotFound
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return &user, nil
+}
+
+func (ug *userGorm) ByEmail(email string) (*User, error) {
+	var user User
+	tx := ug.db.Where("email = ?", email)
+
+	err := first(tx, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func first(tx *gorm.DB, dst interface{}) error {
+	err := tx.First(dst).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (ug *userGorm) Create(user *User) error {

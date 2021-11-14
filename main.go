@@ -21,7 +21,7 @@ func main() {
 	services := models.NewServices(dsn)
 	defer services.Close()
 
-	services.DestructiveReset()
+	services.AutoMigrate()
 
 	staticCT := controllers.NewStatic()
 	usersCT := controllers.NewUsers(services.User)
