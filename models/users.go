@@ -4,15 +4,16 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mpanelo/gocookit/hash"
+	"github.com/mpanelo/gocookit/rand"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 const (
+	hmacSecretKey      = "secret" // TODO load from an environment variable
 	sharedSecretPepper = "pepper" // TODO load from an environment variable
 )
-
-var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 type User struct {
 	gorm.Model
@@ -20,6 +21,8 @@ type User struct {
 	Email        string `gorm:"not null;uniqueIndex"`
 	Password     string `gorm:"-"`
 	PasswordHash string `gorm:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null"`
 }
 
 type UserService interface {
@@ -32,7 +35,13 @@ type userService struct {
 }
 
 func NewUserService(db *gorm.DB) UserService {
-	return &userService{&userValidator{&userGorm{db}}}
+	return &userService{
+		&userValidator{
+			UserDB:     &userGorm{db},
+			hmac:       hash.NewHmac(hmacSecretKey),
+			emailRegex: regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"),
+		},
+	}
 }
 
 func (us *userService) Authenticate(user *User) error {
@@ -63,6 +72,8 @@ type UserDB interface {
 
 type userValidator struct {
 	UserDB
+	hmac       *hash.Hmac
+	emailRegex *regexp.Regexp
 }
 
 func (uv *userValidator) ByEmail(email string) (*User, error) {
@@ -83,6 +94,10 @@ func (uv *userValidator) Create(user *User) error {
 		uv.passwordMinLength,
 		uv.generatePasswordHash,
 		uv.requirePasswordHash,
+		uv.setRememberIfUnset,
+		uv.rememberTokenMinLength,
+		uv.generateRememberHash,
+		uv.requireRememberHash,
 		uv.requireEmail,
 		uv.normalizeEmail,
 		uv.validateEmailFormat,
@@ -128,6 +143,45 @@ func (uv *userValidator) requirePasswordHash(user *User) error {
 	return nil
 }
 
+func (uv *userValidator) setRememberIfUnset(user *User) error {
+	if user.Remember != "" {
+		return nil
+	}
+
+	token, err := rand.RememberToken()
+	if err != nil {
+		return err
+	}
+
+	user.Remember = token
+	return nil
+}
+
+func (uv *userValidator) rememberTokenMinLength(user *User) error {
+	n, err := rand.NBytes(user.Remember)
+	if err != nil {
+		return err
+	}
+	if n < rand.RememberTokenBytesLen {
+		return ErrUserRememberTooShort
+	}
+	return nil
+}
+
+func (uv *userValidator) generateRememberHash(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = uv.hmac.Hash(user.Remember)
+	}
+	return nil
+}
+
+func (uv *userValidator) requireRememberHash(user *User) error {
+	if user.RememberHash == "" {
+		return ErrUserRememberHashRequired
+	}
+	return nil
+}
+
 func (uv *userValidator) requireEmail(user *User) error {
 	if user.Email == "" {
 		return ErrUserEmailRequired
@@ -142,7 +196,7 @@ func (uv *userValidator) normalizeEmail(user *User) error {
 }
 
 func (uv *userValidator) validateEmailFormat(user *User) error {
-	if !emailRegex.MatchString(user.Email) {
+	if !uv.emailRegex.MatchString(user.Email) {
 		return ErrUserEmailInvalid
 	}
 	return nil

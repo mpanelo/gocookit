@@ -4,6 +4,8 @@ const (
 	ErrNotFound                 = privateError("resource not found")
 	ErrIDInvalid                = privateError("ID has an invalid value")
 	ErrUserPasswordHashRequired = privateError("password hash is required")
+	ErrUserRememberHashRequired = privateError("remember hash is required")
+	ErrUserRememberTooShort     = privateError("remember token must be at least 32 bytes long")
 	ErrUserPasswordRequired     = privateError("password is required")                        // TODO convert to a public error
 	ErrUserEmailRequired        = privateError("email is required")                           // TODO convert to a public error
 	ErrUserNameRequired         = privateError("full name is required")                       // TODO convert to a public error
