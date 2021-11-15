@@ -30,9 +30,10 @@ func main() {
 
 	router.Handle("/", staticCT.Home)
 
-	router.Handle("/signup", usersCT.SignUp).Methods(http.MethodGet)
-	router.Handle("/signin", usersCT.SignIn).Methods(http.MethodGet)
-	router.HandleFunc("/users", usersCT.Create).Methods(http.MethodPost)
+	router.Handle("/signup", usersCT.SignUpView).Methods(http.MethodGet)
+	router.Handle("/signin", usersCT.SignInView).Methods(http.MethodGet)
+	router.HandleFunc("/users", usersCT.SignUp).Methods(http.MethodPost)
+	router.HandleFunc("/signin", usersCT.SignIn).Methods(http.MethodPost)
 
 	http.ListenAndServe(":8000", router)
 }

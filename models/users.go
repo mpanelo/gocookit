@@ -24,6 +24,7 @@ type User struct {
 
 type UserService interface {
 	UserDB
+	Authenticate(*User) error
 }
 
 type userService struct {
@@ -32,6 +33,26 @@ type userService struct {
 
 func NewUserService(db *gorm.DB) UserService {
 	return &userService{&userValidator{&userGorm{db}}}
+}
+
+func (us *userService) Authenticate(user *User) error {
+	foundUser, err := us.UserDB.ByEmail(user.Email)
+	if err != nil {
+		return ErrUserCredentialsInvalid
+	}
+
+	passwordHash := []byte(foundUser.PasswordHash)
+	password := []byte(user.Password + sharedSecretPepper)
+
+	err = bcrypt.CompareHashAndPassword(passwordHash, password)
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return ErrUserCredentialsInvalid
+		}
+		return err
+	}
+
+	return nil
 }
 
 type UserDB interface {

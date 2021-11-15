@@ -10,16 +10,16 @@ import (
 
 func NewUsers(us models.UserService) *Users {
 	return &Users{
-		SignUp: views.NewView("users/signup"),
-		SignIn: views.NewView("users/signin"),
-		us:     us,
+		SignUpView: views.NewView("users/signup"),
+		SignInView: views.NewView("users/signin"),
+		us:         us,
 	}
 }
 
 type Users struct {
-	SignUp *views.View
-	SignIn *views.View
-	us     models.UserService
+	SignUpView *views.View
+	SignInView *views.View
+	us         models.UserService
 }
 
 type SignUpForm struct {
@@ -28,7 +28,7 @@ type SignUpForm struct {
 	Password string
 }
 
-func (u *Users) Create(rw http.ResponseWriter, r *http.Request) {
+func (u *Users) SignUp(rw http.ResponseWriter, r *http.Request) {
 	var form SignUpForm
 	if err := parseForm(r, &form); err != nil {
 		panic(err)
@@ -52,4 +52,28 @@ func (u *Users) Create(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintln(rw, user)
+}
+
+type SignInForm struct {
+	Email    string
+	Password string
+}
+
+func (u *Users) SignIn(rw http.ResponseWriter, r *http.Request) {
+	var form SignInForm
+	if err := parseForm(r, &form); err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		return
+	}
+
+	user := &models.User{
+		Email:    form.Email,
+		Password: form.Password,
+	}
+
+	err := u.us.Authenticate(user)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		return
+	}
 }
