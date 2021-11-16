@@ -30,9 +30,13 @@ type SignUpForm struct {
 }
 
 func (u *Users) SignUp(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
 	var form SignUpForm
+
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		vd.SetAlertDanger(err)
+		u.SignUpView.Render(rw, vd)
+		return
 	}
 
 	user := &models.User{
@@ -43,17 +47,19 @@ func (u *Users) SignUp(rw http.ResponseWriter, r *http.Request) {
 
 	err := u.us.Create(user)
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		vd.SetAlertDanger(err)
+		u.SignUpView.Render(rw, vd)
 		return
 	}
 
 	err = u.setRememberTokenCookie(rw, user)
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		vd.SetAlertDanger(err)
+		u.SignInView.Render(rw, vd)
 		return
 	}
 
-	http.Redirect(rw, r, "/whoami", http.StatusFound)
+	http.Redirect(rw, r, "/whoami", http.StatusFound) // TODO redirct to "my recipes" page
 }
 
 type SignInForm struct {
@@ -62,25 +68,30 @@ type SignInForm struct {
 }
 
 func (u *Users) SignIn(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
 	var form SignInForm
+
 	if err := parseForm(r, &form); err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		vd.SetAlertDanger(err)
+		u.SignInView.Render(rw, vd)
 		return
 	}
 
 	user, err := u.us.Authenticate(form.Email, form.Password)
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		vd.SetAlertDanger(err)
+		u.SignInView.Render(rw, vd)
 		return
 	}
 
 	err = u.setRememberTokenCookie(rw, user)
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError) // TODO display user friendly error on page
+		vd.SetAlertDanger(err)
+		u.SignInView.Render(rw, vd)
 		return
 	}
 
-	http.Redirect(rw, r, "/whoami", http.StatusFound)
+	http.Redirect(rw, r, "/whoami", http.StatusFound) // TODO redirct to "my recipes" page
 }
 
 func (u *Users) setRememberTokenCookie(rw http.ResponseWriter, user *models.User) error {

@@ -44,7 +44,17 @@ func (v *View) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (v *View) Render(rw http.ResponseWriter, data interface{}) {
-	err := v.template.ExecuteTemplate(rw, "bootstrap", nil)
+	var vd Data
+	switch d := data.(type) {
+	case Data:
+		vd = d
+	default:
+		vd = Data{
+			Yield: data,
+		}
+	}
+
+	err := v.template.ExecuteTemplate(rw, "bootstrap", vd)
 	if err != nil {
 		panic(err)
 	}
