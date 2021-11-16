@@ -27,7 +27,7 @@ type User struct {
 
 type UserService interface {
 	UserDB
-	Authenticate(*User) error
+	Authenticate(string, string) (*User, error)
 }
 
 type userService struct {
@@ -44,30 +44,32 @@ func NewUserService(db *gorm.DB) UserService {
 	}
 }
 
-func (us *userService) Authenticate(user *User) error {
-	foundUser, err := us.UserDB.ByEmail(user.Email)
+func (us *userService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.UserDB.ByEmail(email)
 	if err != nil {
-		return ErrUserCredentialsInvalid
+		if err == ErrNotFound {
+			return nil, ErrUserCredentialsInvalid
+		}
+		return nil, err
 	}
 
-	passwordHash := []byte(foundUser.PasswordHash)
-	password := []byte(user.Password + sharedSecretPepper)
-
-	err = bcrypt.CompareHashAndPassword(passwordHash, password)
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+sharedSecretPepper))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return ErrUserCredentialsInvalid
+			return nil, ErrUserCredentialsInvalid
 		}
-		return err
+		return nil, err
 	}
 
-	return nil
+	return foundUser, nil
 }
 
 type UserDB interface {
 	ByID(uint) (*User, error)
 	ByEmail(string) (*User, error)
+	ByRemember(string) (*User, error)
 	Create(*User) error
+	Update(*User) error
 }
 
 type userValidator struct {
@@ -86,6 +88,21 @@ func (uv *userValidator) ByEmail(email string) (*User, error) {
 	}
 
 	return uv.UserDB.ByEmail(user.Email)
+}
+
+func (uv *userValidator) ByRemember(remember string) (*User, error) {
+	var user User
+	user.Remember = remember
+
+	err := runUserValidatorFuncs(&user,
+		uv.rememberTokenMinLength,
+		uv.generateRememberHash,
+		uv.requireRememberHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return uv.UserDB.ByRemember(user.RememberHash)
 }
 
 func (uv *userValidator) Create(user *User) error {
@@ -110,6 +127,24 @@ func (uv *userValidator) Create(user *User) error {
 	return uv.UserDB.Create(user)
 }
 
+func (uv *userValidator) Update(user *User) error {
+	err := runUserValidatorFuncs(user,
+		uv.passwordMinLength,
+		uv.generatePasswordHash,
+		uv.requirePasswordHash,
+		uv.rememberTokenMinLength,
+		uv.generateRememberHash,
+		uv.requireRememberHash,
+		uv.normalizeEmail,
+		uv.validateEmailFormat,
+		uv.emailIsAvail)
+	if err != nil {
+		return err
+	}
+
+	return uv.UserDB.Update(user)
+}
+
 type userValidatorFunc func(*User) error
 
 func (uv *userValidator) requirePassword(user *User) error {
@@ -120,6 +155,9 @@ func (uv *userValidator) requirePassword(user *User) error {
 }
 
 func (uv *userValidator) passwordMinLength(user *User) error {
+	if user.Password == "" {
+		return nil
+	}
 	if len(user.Password) < 8 {
 		return ErrUserPasswordTooShort
 	}
@@ -127,6 +165,9 @@ func (uv *userValidator) passwordMinLength(user *User) error {
 }
 
 func (uv *userValidator) generatePasswordHash(user *User) error {
+	if user.Password == "" {
+		return nil
+	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password+sharedSecretPepper), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -158,10 +199,15 @@ func (uv *userValidator) setRememberIfUnset(user *User) error {
 }
 
 func (uv *userValidator) rememberTokenMinLength(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+
 	n, err := rand.NBytes(user.Remember)
 	if err != nil {
 		return err
 	}
+
 	if n < rand.RememberTokenBytesLen {
 		return ErrUserRememberTooShort
 	}
@@ -263,6 +309,18 @@ func (ug *userGorm) ByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
+	var user User
+	tx := ug.db.Where("remember_hash", rememberHash)
+
+	err := first(tx, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func first(tx *gorm.DB, dst interface{}) error {
 	err := tx.First(dst).Error
 	if err != nil {
@@ -279,5 +337,10 @@ func first(tx *gorm.DB, dst interface{}) error {
 
 func (ug *userGorm) Create(user *User) error {
 	result := ug.db.Create(user)
+	return result.Error
+}
+
+func (ug *userGorm) Update(user *User) error {
+	result := ug.db.Save(user)
 	return result.Error
 }

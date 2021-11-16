@@ -35,5 +35,7 @@ func main() {
 	router.HandleFunc("/users", usersCT.SignUp).Methods(http.MethodPost)
 	router.HandleFunc("/signin", usersCT.SignIn).Methods(http.MethodPost)
 
+	router.HandleFunc("/whoami", usersCT.Whoami).Methods(http.MethodGet) // TODO delete temporary endpoint
+
 	http.ListenAndServe(":8000", router)
 }
