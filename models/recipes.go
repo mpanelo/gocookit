@@ -1,11 +1,16 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Recipe struct {
 	gorm.Model
-	UserID uint   `gorm:"not null;index"`
-	Title  string `gorm:"not null"`
+	UserID       uint   `gorm:"not null;index"`
+	Title        string `gorm:"not null"`
+	Description  string
+	Ingredients  string
+	Instructions string
 }
 
 type RecipeService interface {
@@ -28,11 +33,47 @@ type recipeValidator struct {
 	RecipeDB
 }
 
+func (rv *recipeValidator) Create(recipe *Recipe) error {
+	err := runRecipeValidatorFuncs(recipe,
+		userIDRequired,
+		titleRequired)
+	if err != nil {
+		return err
+	}
+
+	return rv.Create(recipe)
+}
+
+func userIDRequired(recipe *Recipe) error {
+	if recipe.UserID <= 0 {
+		return ErrRecipeUserIDRequired
+	}
+	return nil
+}
+
+func titleRequired(recipe *Recipe) error {
+	if recipe.Title == "" {
+		return ErrRecipeTitleRequired
+	}
+	return nil
+}
+
 type recipeGorm struct {
 	db *gorm.DB
 }
 
-func (gg *recipeGorm) Create(recipe *Recipe) error {
-	result := gg.db.Create(recipe)
+func (rg *recipeGorm) Create(recipe *Recipe) error {
+	result := rg.db.Create(recipe)
 	return result.Error
+}
+
+type recipeValidatorFunc func(*Recipe) error
+
+func runRecipeValidatorFuncs(recipe *Recipe, funcs ...recipeValidatorFunc) error {
+	for _, f := range funcs {
+		if err := f(recipe); err != nil {
+			return err
+		}
+	}
+	return nil
 }

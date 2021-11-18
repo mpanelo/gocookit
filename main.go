@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mpanelo/gocookit/controllers"
+	"github.com/mpanelo/gocookit/middleware"
 	"github.com/mpanelo/gocookit/models"
 )
 
@@ -34,7 +35,8 @@ func main() {
 	setUsersRoutes(router, usersCT)
 	setRecipesRoutes(router, recipesCT)
 
-	http.ListenAndServe(":8000", router)
+	userMw := middleware.User{UserService: services.User}
+	http.ListenAndServe(":8000", userMw.Apply(router))
 }
 
 func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
@@ -47,5 +49,7 @@ func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
 }
 
 func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
-	router.Handle("/recipes/new", recipesCT.NewView).Methods(http.MethodGet)
+	requireUserMw := middleware.RequireUser{}
+	router.Handle("/recipes/new", requireUserMw.Apply(recipesCT.NewView)).Methods(http.MethodGet)
+	router.Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Create)).Methods(http.MethodPost)
 }

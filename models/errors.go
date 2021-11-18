@@ -10,6 +10,7 @@ const (
 	ErrUserPasswordHashRequired = privateError("password hash is required")
 	ErrUserRememberHashRequired = privateError("remember hash is required")
 	ErrUserRememberTooShort     = privateError("remember token must be at least 32 bytes long")
+	ErrRecipeUserIDRequired     = privateError("user ID is required")
 	ErrUserPasswordRequired     = publicError("password is required")
 	ErrUserEmailRequired        = publicError("email is required")
 	ErrUserNameRequired         = publicError("full name is required")
@@ -17,6 +18,7 @@ const (
 	ErrUserEmailInvalid         = publicError("email provided has an invalid format")
 	ErrUserEmailTaken           = publicError("email is already taken")
 	ErrUserCredentialsInvalid   = publicError("email or password provided is invalid")
+	ErrRecipeTitleRequired      = publicError("recipe title is required")
 )
 
 type privateError string

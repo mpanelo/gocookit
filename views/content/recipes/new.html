@@ -3,7 +3,7 @@
     <div class="card mt-5 shadow rounded">
         <div class="card-header">Create your recipe</div>
         <div class="card-body">
-            <form>
+            <form action="/recipes" method="POST">
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -12,7 +12,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" required></textarea>
+                            <textarea class="form-control" id="description" name="description"></textarea>
                         </div>
                     </div>
                 </div>
@@ -20,14 +20,14 @@
                     <div class="col">
                         <label for="ingredients" class="form-label">Ingredients</label>
                         <textarea class="form-control" style="height: 200px" id="ingredients"
-                            placeholder="Put each ingredient on its own line" required></textarea>
+                            placeholder="Put each ingredient on its own line" name="ingredients"></textarea>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col">
                         <label for="instructions" class="form-label">Instructions</label>
                         <textarea class="form-control" style="height: 200px" id="instructions"
-                            placeholder="Put each instruction on its own line" required></textarea>
+                            placeholder="Put each instruction on its own line" name="instructions"></textarea>
                     </div>
                 </div>
                 <button type="submit" class="w-25 btn btn-primary">Create</button>
