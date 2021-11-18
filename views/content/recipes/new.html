@@ -1,0 +1,39 @@
+{{define "yield"}}
+<div class="container">
+    <div class="card mt-5 shadow rounded">
+        <div class="card-header">Create your recipe</div>
+        <div class="card-body">
+            <form>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="ingredients" class="form-label">Ingredients</label>
+                        <textarea class="form-control" style="height: 200px" id="ingredients"
+                            placeholder="Put each ingredient on its own line" required></textarea>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="instructions" class="form-label">Instructions</label>
+                        <textarea class="form-control" style="height: 200px" id="instructions"
+                            placeholder="Put each instruction on its own line" required></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="w-25 btn btn-primary">Create</button>
+                <a class="w-25 btn btn-secondary" href="/recipes">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -7,8 +7,9 @@ import (
 )
 
 type Services struct {
-	User UserService
-	db   *gorm.DB
+	User   UserService
+	Recipe RecipeService
+	db     *gorm.DB
 }
 
 func NewServices(dsn string) *Services {
@@ -19,20 +20,21 @@ func NewServices(dsn string) *Services {
 		panic(err)
 	}
 	return &Services{
-		User: NewUserService(db),
-		db:   db,
+		User:   NewUserService(db),
+		Recipe: NewRecipesService(db),
+		db:     db,
 	}
 }
 
 func (s *Services) DestructiveReset() error {
-	if err := s.db.Migrator().DropTable(&User{}); err != nil {
+	if err := s.db.Migrator().DropTable(&User{}, &Recipe{}); err != nil {
 		return err
 	}
 	return s.AutoMigrate()
 }
 
 func (s *Services) AutoMigrate() error {
-	return s.db.AutoMigrate(&User{})
+	return s.db.AutoMigrate(&User{}, &Recipe{})
 }
 
 func (s *Services) Close() error {

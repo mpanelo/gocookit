@@ -21,21 +21,31 @@ func main() {
 	services := models.NewServices(dsn)
 	defer services.Close()
 
-	services.DestructiveReset()
+	services.AutoMigrate()
 
 	staticCT := controllers.NewStatic()
 	usersCT := controllers.NewUsers(services.User)
+	recipesCT := controllers.NewRecipes(services.Recipe)
 
 	router := mux.NewRouter()
 
 	router.Handle("/", staticCT.Home)
 
+	setUsersRoutes(router, usersCT)
+	setRecipesRoutes(router, recipesCT)
+
+	http.ListenAndServe(":8000", router)
+}
+
+func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
 	router.Handle("/signup", usersCT.SignUpView).Methods(http.MethodGet)
 	router.Handle("/signin", usersCT.SignInView).Methods(http.MethodGet)
 	router.HandleFunc("/users", usersCT.SignUp).Methods(http.MethodPost)
 	router.HandleFunc("/signin", usersCT.SignIn).Methods(http.MethodPost)
 
 	router.HandleFunc("/whoami", usersCT.Whoami).Methods(http.MethodGet) // TODO delete temporary endpoint
+}
 
-	http.ListenAndServe(":8000", router)
+func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
+	router.Handle("/recipes/new", recipesCT.NewView).Methods(http.MethodGet)
 }
