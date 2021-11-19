@@ -26,6 +26,7 @@ func NewRecipesService(db *gorm.DB) RecipeService {
 }
 
 type RecipeDB interface {
+	ByID(uint) (*Recipe, error)
 	Create(*Recipe) error
 }
 
@@ -41,7 +42,7 @@ func (rv *recipeValidator) Create(recipe *Recipe) error {
 		return err
 	}
 
-	return rv.Create(recipe)
+	return rv.RecipeDB.Create(recipe)
 }
 
 func userIDRequired(recipe *Recipe) error {
@@ -60,6 +61,17 @@ func titleRequired(recipe *Recipe) error {
 
 type recipeGorm struct {
 	db *gorm.DB
+}
+
+func (rg *recipeGorm) ByID(id uint) (*Recipe, error) {
+	var recipe Recipe
+	tx := rg.db.Where("id = ?", id)
+
+	if err := first(tx, &recipe); err != nil {
+		return nil, err
+	}
+
+	return &recipe, nil
 }
 
 func (rg *recipeGorm) Create(recipe *Recipe) error {

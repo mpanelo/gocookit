@@ -1,0 +1,52 @@
+{{define "yield"}}
+<div class="container">
+    <h2 class="my-3 text-center">Edit recipe details</h2>
+    <div class="card shadow rounded">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {{template "updateRecipeForm" .}}
+                </div>
+                <div class="col-md-6">
+                    {{template "uploadImageForm" .}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "updateRecipeForm"}}
+<form action="/recipes/{{.ID}}" method="POST">
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" name="title" value={{.Title}}>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description">{{.Description}}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="ingredients" class="form-label">Ingredients</label>
+        <textarea class="form-control" style="height: 200px" id="ingredients"
+            placeholder="Put each ingredient on its own line" name="ingredients">{{.Ingredients}}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="instructions" class="form-label">Instructions</label>
+        <textarea class="form-control" style="height: 200px" id="instructions"
+            placeholder="Put each instruction on its own line" name="instructions">{{.Instructions}}</textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <button type="submit" class="w-100 btn btn-primary">Update</button>
+        </div>
+        <div class="col-md-6">
+            <a class="w-100 btn btn-secondary" href="/recipes">Cancel</a>
+        </div>
+    </div>
+</form>
+{{end}}
+
+{{define "uploadImageForm"}}
+<p>Add Image Uploader</p>
+{{end}}

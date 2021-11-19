@@ -24,11 +24,11 @@ func main() {
 
 	services.AutoMigrate()
 
+	router := mux.NewRouter()
+
 	staticCT := controllers.NewStatic()
 	usersCT := controllers.NewUsers(services.User)
-	recipesCT := controllers.NewRecipes(services.Recipe)
-
-	router := mux.NewRouter()
+	recipesCT := controllers.NewRecipes(services.Recipe, router)
 
 	router.Handle("/", staticCT.Home)
 
@@ -50,6 +50,14 @@ func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
 
 func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
 	requireUserMw := middleware.RequireUser{}
-	router.Handle("/recipes/new", requireUserMw.Apply(recipesCT.NewView)).Methods(http.MethodGet)
-	router.Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Create)).Methods(http.MethodPost)
+	router.
+		Handle("/recipes/new", requireUserMw.Apply(recipesCT.NewView)).
+		Methods(http.MethodGet)
+	router.
+		Handle("/recipes/{id:[0-9]+}/edit", requireUserMw.ApplyFn(recipesCT.Edit)).
+		Methods(http.MethodGet).
+		Name(controllers.RouteRecipeEdit)
+	router.
+		Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Create)).
+		Methods(http.MethodPost)
 }
