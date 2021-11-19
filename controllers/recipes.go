@@ -16,19 +16,37 @@ const (
 )
 
 type Recipes struct {
-	NewView  *views.View
-	EditView *views.View
-	rs       models.RecipeService
-	router   *mux.Router
+	NewView   *views.View
+	EditView  *views.View
+	IndexView *views.View
+	rs        models.RecipeService
+	router    *mux.Router
 }
 
 func NewRecipes(rs models.RecipeService, router *mux.Router) *Recipes {
 	return &Recipes{
-		NewView:  views.NewView("recipes/new"),
-		EditView: views.NewView("recipes/edit"),
-		rs:       rs,
-		router:   router,
+		NewView:   views.NewView("recipes/new"),
+		EditView:  views.NewView("recipes/edit"),
+		IndexView: views.NewView("recipes/index"),
+		rs:        rs,
+		router:    router,
 	}
+}
+
+func (rc *Recipes) Index(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	user := context.User(r.Context())
+
+	recipes, err := rc.rs.ByUserID(user.ID)
+	if err != nil {
+		vd.SetAlertDanger(err)
+		rc.IndexView.Render(rw, r, vd)
+		return
+	}
+
+	vd.Yield = recipes
+	rc.IndexView.Render(rw, r, vd)
 }
 
 type RecipeForm struct {

@@ -51,6 +51,9 @@ func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
 func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
 	requireUserMw := middleware.RequireUser{}
 	router.
+		Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Index)).
+		Methods(http.MethodGet)
+	router.
 		Handle("/recipes/new", requireUserMw.Apply(recipesCT.NewView)).
 		Methods(http.MethodGet)
 	router.

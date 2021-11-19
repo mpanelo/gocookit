@@ -27,6 +27,7 @@ func NewRecipesService(db *gorm.DB) RecipeService {
 
 type RecipeDB interface {
 	ByID(uint) (*Recipe, error)
+	ByUserID(uint) ([]Recipe, error)
 	Create(*Recipe) error
 }
 
@@ -72,6 +73,15 @@ func (rg *recipeGorm) ByID(id uint) (*Recipe, error) {
 	}
 
 	return &recipe, nil
+}
+
+func (rg *recipeGorm) ByUserID(userID uint) ([]Recipe, error) {
+	var recipes []Recipe
+	result := rg.db.Where("user_id", userID).Find(&recipes)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return recipes, nil
 }
 
 func (rg *recipeGorm) Create(recipe *Recipe) error {

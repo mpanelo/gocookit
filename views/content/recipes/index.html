@@ -1,0 +1,28 @@
+{{define "yield"}}
+<div class="container">
+    <h2 class="my-3 text-center">My recipes</h2>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        {{range .}}
+            {{template "recipeCard" .}}
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{define "recipeCard"}}
+<div class="col">
+    <div class="card shadow-sm">
+        <img src="#" class="card-img-top">
+        <div class="card-body">
+            <h5 class="card-title">{{.Title}}</h5>
+            <p class="card-text">{{.Description}}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                    <a href="/recipes/{{.ID}}" class="btn btn-sm btn-outline-secondary">View</a>
+                    <a href="/recipes/{{.ID}}/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
