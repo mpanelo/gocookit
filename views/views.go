@@ -1,10 +1,14 @@
 package views
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"path/filepath"
+
+	"github.com/mpanelo/gocookit/context"
 )
 
 const (
@@ -40,11 +44,13 @@ func getLayouts() []string {
 }
 
 func (v *View) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	v.Render(rw, nil)
+	v.Render(rw, r, nil)
 }
 
-func (v *View) Render(rw http.ResponseWriter, data interface{}) {
+func (v *View) Render(rw http.ResponseWriter, r *http.Request, data interface{}) {
 	var vd Data
+	var buf bytes.Buffer
+
 	switch d := data.(type) {
 	case Data:
 		vd = d
@@ -54,8 +60,13 @@ func (v *View) Render(rw http.ResponseWriter, data interface{}) {
 		}
 	}
 
-	err := v.template.ExecuteTemplate(rw, "bootstrap", vd)
+	vd.User = context.User(r.Context())
+
+	err := v.template.ExecuteTemplate(&buf, "bootstrap", vd)
 	if err != nil {
-		panic(err)
+		http.Error(rw, AlertGenericMsg, http.StatusInternalServerError)
+		return
 	}
+
+	io.Copy(rw, &buf)
 }

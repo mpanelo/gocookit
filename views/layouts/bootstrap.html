@@ -11,7 +11,7 @@
     <title>Go Cook it!</title>
   </head>
   <body>
-    {{template "navbar"}}
+    {{template "navbar" .}}
     {{if .Alert}}
       {{template "alert" .Alert}}
     {{end}}

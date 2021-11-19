@@ -8,9 +8,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarsExample04">
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                {{if .User}}
                 <li class="nav-item">
                     <a class="nav-link" href="#">My Recipes</a>
                 </li>
+                {{end}}
             </ul>
             <div>
                 <a class="btn btn-outline-light me-2" href="/signin">Sign In</a>

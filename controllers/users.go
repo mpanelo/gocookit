@@ -35,7 +35,7 @@ func (u *Users) SignUp(rw http.ResponseWriter, r *http.Request) {
 
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlertDanger(err)
-		u.SignUpView.Render(rw, vd)
+		u.SignUpView.Render(rw, r, vd)
 		return
 	}
 
@@ -48,14 +48,14 @@ func (u *Users) SignUp(rw http.ResponseWriter, r *http.Request) {
 	err := u.us.Create(user)
 	if err != nil {
 		vd.SetAlertDanger(err)
-		u.SignUpView.Render(rw, vd)
+		u.SignUpView.Render(rw, r, vd)
 		return
 	}
 
 	err = u.setRememberTokenCookie(rw, user)
 	if err != nil {
 		vd.SetAlertDanger(err)
-		u.SignInView.Render(rw, vd)
+		u.SignInView.Render(rw, r, vd)
 		return
 	}
 
@@ -73,21 +73,21 @@ func (u *Users) SignIn(rw http.ResponseWriter, r *http.Request) {
 
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlertDanger(err)
-		u.SignInView.Render(rw, vd)
+		u.SignInView.Render(rw, r, vd)
 		return
 	}
 
 	user, err := u.us.Authenticate(form.Email, form.Password)
 	if err != nil {
 		vd.SetAlertDanger(err)
-		u.SignInView.Render(rw, vd)
+		u.SignInView.Render(rw, r, vd)
 		return
 	}
 
 	err = u.setRememberTokenCookie(rw, user)
 	if err != nil {
 		vd.SetAlertDanger(err)
-		u.SignInView.Render(rw, vd)
+		u.SignInView.Render(rw, r, vd)
 		return
 	}
 

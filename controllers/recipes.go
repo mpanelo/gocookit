@@ -41,7 +41,7 @@ func (rc *Recipes) Create(rw http.ResponseWriter, r *http.Request) {
 
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlertDanger(err)
-		rc.NewView.Render(rw, vd)
+		rc.NewView.Render(rw, r, vd)
 		return
 	}
 
@@ -55,7 +55,7 @@ func (rc *Recipes) Create(rw http.ResponseWriter, r *http.Request) {
 	err := rc.rs.Create(&recipe)
 	if err != nil {
 		vd.SetAlertDanger(err)
-		rc.NewView.Render(rw, vd)
+		rc.NewView.Render(rw, r, vd)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (rc *Recipes) Edit(rw http.ResponseWriter, r *http.Request) {
 
 	var vd views.Data
 	vd.Yield = recipe
-	rc.EditView.Render(rw, vd)
+	rc.EditView.Render(rw, r, vd)
 }
 
 func (rc *Recipes) getRecipe(rw http.ResponseWriter, r *http.Request) (*models.Recipe, error) {

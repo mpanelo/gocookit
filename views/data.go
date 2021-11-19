@@ -1,5 +1,7 @@
 package views
 
+import "github.com/mpanelo/gocookit/models"
+
 const (
 	AlertLevelSuccess = "success"
 	AlertLevelDanger  = "danger"
@@ -10,6 +12,7 @@ const (
 
 type Data struct {
 	Alert *Alert
+	User  *models.User
 	Yield interface{}
 }
 
