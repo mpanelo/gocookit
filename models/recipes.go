@@ -47,6 +47,17 @@ func (rv *recipeValidator) Create(recipe *Recipe) error {
 	return rv.RecipeDB.Create(recipe)
 }
 
+func (rv *recipeValidator) Update(recipe *Recipe) error {
+	err := runRecipeValidatorFuncs(recipe,
+		userIDRequired,
+		titleRequired)
+	if err != nil {
+		return err
+	}
+
+	return rv.RecipeDB.Update(recipe)
+}
+
 func userIDRequired(recipe *Recipe) error {
 	if recipe.UserID <= 0 {
 		return ErrRecipeUserIDRequired
