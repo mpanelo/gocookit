@@ -1,0 +1,15 @@
+{{define "yield"}}
+<div class="container">
+    <article>
+        <h1 class="my-3">{{.Title}}</h1>
+        <hr>
+        <a href="/recipes/{{.ID}}/edit" class="btn btn-small btn-outline-secondary mb-3">Edit</a>
+        <h2 class="border-bottom">Description</h2>
+        <p style="white-space: pre-line">{{.Description}}</p>
+        <h2 class="border-bottom">Ingredients</h2>
+        <p style="white-space: pre-line">{{.Ingredients}}</p>
+        <h2 class="border-bottom">Instructions</h2>
+        <p style="white-space: pre-line">{{.Instructions}}</p>
+    </article>
+</div>
+{{end}}

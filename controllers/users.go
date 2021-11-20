@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/mpanelo/gocookit/models"
@@ -59,7 +58,7 @@ func (u *Users) SignUp(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(rw, r, "/whoami", http.StatusFound) // TODO redirct to "my recipes" page
+	http.Redirect(rw, r, "/recipes", http.StatusFound)
 }
 
 type SignInForm struct {
@@ -116,20 +115,4 @@ func (u *Users) setRememberTokenCookie(rw http.ResponseWriter, user *models.User
 	})
 
 	return nil
-}
-
-func (u *Users) Whoami(rw http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("remember_token")
-	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	user, err := u.us.ByRemember(cookie.Value)
-	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Fprintln(rw, "You are "+user.Name)
 }

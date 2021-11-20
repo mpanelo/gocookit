@@ -13,12 +13,14 @@ import (
 
 const (
 	RouteRecipeEdit = "routeRecipeEdit"
+	RouteRecipeShow = "routeRecipeShow"
 )
 
 type Recipes struct {
 	NewView   *views.View
 	EditView  *views.View
 	IndexView *views.View
+	ShowView  *views.View
 	rs        models.RecipeService
 	router    *mux.Router
 }
@@ -28,9 +30,28 @@ func NewRecipes(rs models.RecipeService, router *mux.Router) *Recipes {
 		NewView:   views.NewView("recipes/new"),
 		EditView:  views.NewView("recipes/edit"),
 		IndexView: views.NewView("recipes/index"),
+		ShowView:  views.NewView("recipes/show"),
 		rs:        rs,
 		router:    router,
 	}
+}
+
+func (rc *Recipes) Show(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	recipe, err := rc.getRecipe(rw, r)
+	if err != nil {
+		return
+	}
+
+	user := context.User(r.Context())
+	if recipe.UserID != user.ID {
+		http.Error(rw, "Recipe not found", http.StatusNotFound)
+		return
+	}
+
+	vd.Yield = recipe
+	rc.ShowView.Render(rw, r, vd)
 }
 
 func (rc *Recipes) Index(rw http.ResponseWriter, r *http.Request) {
@@ -49,13 +70,13 @@ func (rc *Recipes) Index(rw http.ResponseWriter, r *http.Request) {
 	rc.IndexView.Render(rw, r, vd)
 }
 
-type RecipeForm struct {
+type RecipeCreateForm struct {
 	Title string `schema:"title"`
 }
 
 func (rc *Recipes) Create(rw http.ResponseWriter, r *http.Request) {
 	var vd views.Data
-	var form RecipeForm
+	var form RecipeCreateForm
 
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlertDanger(err)
@@ -92,8 +113,7 @@ func (rc *Recipes) Edit(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	user := context.User(r.Context())
-
-	if recipe.ID != user.ID {
+	if recipe.UserID != user.ID {
 		http.Error(rw, "Recipe not found", http.StatusNotFound)
 		return
 	}
@@ -101,6 +121,54 @@ func (rc *Recipes) Edit(rw http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	vd.Yield = recipe
 	rc.EditView.Render(rw, r, vd)
+}
+
+type RecipeUpdateForm struct {
+	Title        string `schema:"title"`
+	Description  string `schema:"description"`
+	Ingredients  string `schema:"ingredients"`
+	Instructions string `schema:"instructions"`
+}
+
+func (rc *Recipes) Update(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	var form RecipeUpdateForm
+
+	recipe, err := rc.getRecipe(rw, r)
+	if err != nil {
+		return
+	}
+
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlertDanger(err)
+		rc.EditView.Render(rw, r, vd)
+		return
+	}
+
+	user := context.User(r.Context())
+	if recipe.UserID != user.ID {
+		http.Error(rw, "Recipe not found", http.StatusNotFound)
+		return
+	}
+
+	recipe.Title = form.Title
+	recipe.Description = form.Description
+	recipe.Ingredients = form.Ingredients
+	recipe.Instructions = form.Instructions
+
+	err = rc.rs.Update(recipe)
+	if err != nil {
+		vd.SetAlertDanger(err)
+		rc.EditView.Render(rw, r, vd)
+		return
+	}
+
+	url, err := rc.router.Get(RouteRecipeShow).URL("id", fmt.Sprintf("%v", recipe.ID))
+	if err != nil {
+		http.Redirect(rw, r, "/recipes", http.StatusFound)
+		return
+	}
+	http.Redirect(rw, r, url.Path, http.StatusFound)
 }
 
 func (rc *Recipes) getRecipe(rw http.ResponseWriter, r *http.Request) (*models.Recipe, error) {

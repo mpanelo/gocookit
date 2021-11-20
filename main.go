@@ -44,8 +44,6 @@ func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
 	router.Handle("/signin", usersCT.SignInView).Methods(http.MethodGet)
 	router.HandleFunc("/users", usersCT.SignUp).Methods(http.MethodPost)
 	router.HandleFunc("/signin", usersCT.SignIn).Methods(http.MethodPost)
-
-	router.HandleFunc("/whoami", usersCT.Whoami).Methods(http.MethodGet) // TODO delete temporary endpoint
 }
 
 func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
@@ -54,13 +52,20 @@ func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
 		Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Index)).
 		Methods(http.MethodGet)
 	router.
+		Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Create)).
+		Methods(http.MethodPost)
+	router.
 		Handle("/recipes/new", requireUserMw.Apply(recipesCT.NewView)).
 		Methods(http.MethodGet)
+	router.
+		Handle("/recipes/{id:[0-9]+}", requireUserMw.ApplyFn(recipesCT.Show)).
+		Methods(http.MethodGet).
+		Name(controllers.RouteRecipeShow)
 	router.
 		Handle("/recipes/{id:[0-9]+}/edit", requireUserMw.ApplyFn(recipesCT.Edit)).
 		Methods(http.MethodGet).
 		Name(controllers.RouteRecipeEdit)
 	router.
-		Handle("/recipes", requireUserMw.ApplyFn(recipesCT.Create)).
+		Handle("/recipes/{id:[0-9]+}", requireUserMw.ApplyFn(recipesCT.Update)).
 		Methods(http.MethodPost)
 }

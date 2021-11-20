@@ -29,6 +29,7 @@ type RecipeDB interface {
 	ByID(uint) (*Recipe, error)
 	ByUserID(uint) ([]Recipe, error)
 	Create(*Recipe) error
+	Update(*Recipe) error
 }
 
 type recipeValidator struct {
@@ -86,6 +87,11 @@ func (rg *recipeGorm) ByUserID(userID uint) ([]Recipe, error) {
 
 func (rg *recipeGorm) Create(recipe *Recipe) error {
 	result := rg.db.Create(recipe)
+	return result.Error
+}
+
+func (rg *recipeGorm) Update(recipe *Recipe) error {
+	result := rg.db.Save(recipe)
 	return result.Error
 }
 

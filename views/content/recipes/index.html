@@ -1,6 +1,7 @@
 {{define "yield"}}
 <div class="container">
-    <h2 class="my-3 text-center">My recipes</h2>
+    <h2 class="my-3 text-center">My Recipes</h2>
+    <a href="/recipes/new" class="btn btn-sm btn-outline-primary mb-3">New Recipe</a>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
         {{range .}}
             {{template "recipeCard" .}}
