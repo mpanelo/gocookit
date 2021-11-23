@@ -90,7 +90,7 @@ func (u *Users) SignIn(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(rw, r, "/whoami", http.StatusFound) // TODO redirct to "my recipes" page
+	http.Redirect(rw, r, "/recipes", http.StatusFound)
 }
 
 func (u *Users) setRememberTokenCookie(rw http.ResponseWriter, user *models.User) error {

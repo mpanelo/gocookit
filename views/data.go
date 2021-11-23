@@ -16,6 +16,13 @@ type Data struct {
 	Yield interface{}
 }
 
+func (d *Data) SetSuccess(msg string) {
+	d.Alert = &Alert{
+		Level: AlertLevelSuccess,
+		Msg:   msg,
+	}
+}
+
 func (d *Data) SetAlertDanger(err error) {
 	d.Alert = &Alert{
 		Level: AlertLevelDanger,

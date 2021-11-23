@@ -9,6 +9,7 @@ import (
 type Services struct {
 	User   UserService
 	Recipe RecipeService
+	Images ImageService
 	db     *gorm.DB
 }
 
@@ -22,6 +23,7 @@ func NewServices(dsn string) *Services {
 	return &Services{
 		User:   NewUserService(db),
 		Recipe: NewRecipesService(db),
+		Images: NewImageService(),
 		db:     db,
 	}
 }

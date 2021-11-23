@@ -28,7 +28,7 @@ func main() {
 
 	staticCT := controllers.NewStatic()
 	usersCT := controllers.NewUsers(services.User)
-	recipesCT := controllers.NewRecipes(services.Recipe, router)
+	recipesCT := controllers.NewRecipes(services.Recipe, services.Images, router)
 
 	router.Handle("/", staticCT.Home)
 
@@ -67,5 +67,8 @@ func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
 		Name(controllers.RouteRecipeEdit)
 	router.
 		Handle("/recipes/{id:[0-9]+}", requireUserMw.ApplyFn(recipesCT.Update)).
+		Methods(http.MethodPost)
+	router.
+		Handle("/recipes/{id:[0-9]+}/images", requireUserMw.ApplyFn(recipesCT.UploadImages)).
 		Methods(http.MethodPost)
 }

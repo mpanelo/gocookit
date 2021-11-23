@@ -14,6 +14,8 @@ import (
 const (
 	RouteRecipeEdit = "routeRecipeEdit"
 	RouteRecipeShow = "routeRecipeShow"
+
+	maxMultipartFormMemory = 5 << 20 // 5 megabytes
 )
 
 type Recipes struct {
@@ -22,18 +24,64 @@ type Recipes struct {
 	IndexView *views.View
 	ShowView  *views.View
 	rs        models.RecipeService
+	is        models.ImageService
 	router    *mux.Router
 }
 
-func NewRecipes(rs models.RecipeService, router *mux.Router) *Recipes {
+func NewRecipes(rs models.RecipeService, is models.ImageService, router *mux.Router) *Recipes {
 	return &Recipes{
 		NewView:   views.NewView("recipes/new"),
 		EditView:  views.NewView("recipes/edit"),
 		IndexView: views.NewView("recipes/index"),
 		ShowView:  views.NewView("recipes/show"),
 		rs:        rs,
+		is:        is,
 		router:    router,
 	}
+}
+
+func (rc *Recipes) UploadImages(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	recipe, err := rc.getRecipe(rw, r)
+	if err != nil {
+		return
+	}
+
+	user := context.User(r.Context())
+	if recipe.UserID != user.ID {
+		http.Error(rw, "Recipe not found", http.StatusNotFound)
+		return
+	}
+
+	vd.Yield = recipe
+
+	err = r.ParseMultipartForm(maxMultipartFormMemory)
+	if err != nil {
+		vd.SetAlertDanger(err)
+		rc.EditView.Render(rw, r, vd)
+		return
+	}
+
+	for _, imageFile := range r.MultipartForm.File["images"] {
+		srcFile, err := imageFile.Open()
+		if err != nil {
+			vd.SetAlertDanger(err)
+			rc.EditView.Render(rw, r, vd)
+			return
+		}
+		defer srcFile.Close()
+
+		err = rc.is.Create(recipe.ID, srcFile, imageFile.Filename)
+		if err != nil {
+			vd.SetAlertDanger(err)
+			rc.EditView.Render(rw, r, vd)
+			return
+		}
+	}
+
+	vd.SetSuccess("Images uploaded successfully")
+	rc.EditView.Render(rw, r, vd)
 }
 
 func (rc *Recipes) Show(rw http.ResponseWriter, r *http.Request) {
