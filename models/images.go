@@ -9,6 +9,7 @@ import (
 
 type ImageService interface {
 	Create(uint, io.Reader, string) error
+	ByRecipeID(uint) ([]string, error)
 }
 
 func NewImageService() ImageService {
@@ -16,6 +17,19 @@ func NewImageService() ImageService {
 }
 
 type imageService struct{}
+
+func (is *imageService) ByRecipeID(recipeID uint) ([]string, error) {
+	images, err := filepath.Glob(is.imageDir(recipeID) + "/*")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range images {
+		images[i] = "/" + images[i]
+	}
+
+	return images, nil
+}
 
 func (is *imageService) Create(recipeID uint, src io.Reader, fileName string) error {
 	dir, err := is.mkImageDir(recipeID)

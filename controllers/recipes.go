@@ -240,5 +240,11 @@ func (rc *Recipes) getRecipe(rw http.ResponseWriter, r *http.Request) (*models.R
 		return nil, err
 	}
 
+	images, err := rc.is.ByRecipeID(recipe.ID)
+	if err != nil {
+		http.Error(rw, "Failed to fetch recipe images", http.StatusInternalServerError)
+		return nil, err
+	}
+	recipe.Images = images
 	return recipe, nil
 }

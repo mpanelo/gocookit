@@ -48,14 +48,25 @@
 {{end}}
 
 {{define "uploadImageForm"}}
-<form action="/recipes/{{.ID}}/images" method="POST" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label for="images" class="form-label">Images</label>
-        <div class="input-group">
-            <input type="file" multiple="multiple" class="form-control" id="images" name="images"
-                aria-describedby="uploadBtn">
-            <button class="btn btn-outline-secondary" type="submit" id="uploadBtn">Upload</button>
+<div class="row">
+    {{range .SplitImagesN 2}}
+        <div class="col-md-6">
+            {{range .}}
+            <a href="{{.}}"><img class="w-100 mb-2" src="{{.}}"></a>
+            {{end}}
         </div>
-    </div>
-</form>
+    {{end}}
+</div>
+<div class="row">
+    <form action="/recipes/{{.ID}}/images" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="images" class="form-label">Images</label>
+            <div class="input-group">
+                <input type="file" multiple="multiple" class="form-control" id="images" name="images"
+                    aria-describedby="uploadBtn">
+                <button class="btn btn-outline-secondary" type="submit" id="uploadBtn">Upload</button>
+            </div>
+        </div>
+    </form>
+</div>
 {{end}}

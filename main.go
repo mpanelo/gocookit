@@ -32,6 +32,9 @@ func main() {
 
 	router.Handle("/", staticCT.Home)
 
+	imagesHandler := http.StripPrefix("/images/", http.FileServer(http.Dir("./images/")))
+	router.PathPrefix("/images/").Handler(imagesHandler)
+
 	setUsersRoutes(router, usersCT)
 	setRecipesRoutes(router, recipesCT)
 

@@ -11,6 +11,18 @@ type Recipe struct {
 	Description  string
 	Ingredients  string
 	Instructions string
+	Images       []string `gorm:"-"`
+}
+
+func (r *Recipe) SplitImagesN(n int) [][]string {
+	buckets := make([][]string, n)
+
+	for i, image := range r.Images {
+		bucketIdx := i % n
+		buckets[bucketIdx] = append(buckets[bucketIdx], image)
+	}
+
+	return buckets
 }
 
 type RecipeService interface {
