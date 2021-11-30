@@ -5,11 +5,26 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+type Image struct {
+	RecipeID uint
+	Filename string
+}
+
+func (i *Image) Path() string {
+	return fmt.Sprintf("/images/recipes/%v/%v", i.RecipeID, i.Filename)
+}
+
+func (i *Image) RelativePath() string {
+	return i.Path()[1:]
+}
 
 type ImageService interface {
 	Create(uint, io.Reader, string) error
-	ByRecipeID(uint) ([]string, error)
+	ByRecipeID(uint) ([]Image, error)
+	Delete(*Image) error
 }
 
 func NewImageService() ImageService {
@@ -18,14 +33,23 @@ func NewImageService() ImageService {
 
 type imageService struct{}
 
-func (is *imageService) ByRecipeID(recipeID uint) ([]string, error) {
-	images, err := filepath.Glob(is.imageDir(recipeID) + "/*")
+func (is *imageService) Delete(i *Image) error {
+	return os.Remove(i.RelativePath())
+}
+
+func (is *imageService) ByRecipeID(recipeID uint) ([]Image, error) {
+	pathPrefix := is.imageDir(recipeID)
+	imagePaths, err := filepath.Glob(pathPrefix + "/*")
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range images {
-		images[i] = "/" + images[i]
+	images := make([]Image, len(imagePaths))
+	for i := range imagePaths {
+		images[i] = Image{
+			RecipeID: recipeID,
+			Filename: strings.Replace(imagePaths[i], pathPrefix+"/", "", 1),
+		}
 	}
 
 	return images, nil

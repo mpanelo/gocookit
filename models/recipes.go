@@ -11,11 +11,11 @@ type Recipe struct {
 	Description  string
 	Ingredients  string
 	Instructions string
-	Images       []string `gorm:"-"`
+	Images       []Image `gorm:"-"`
 }
 
-func (r *Recipe) SplitImagesN(n int) [][]string {
-	buckets := make([][]string, n)
+func (r *Recipe) ImagesSplitN(n int) [][]Image {
+	buckets := make([][]Image, n)
 
 	for i, image := range r.Images {
 		bucketIdx := i % n

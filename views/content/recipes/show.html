@@ -5,10 +5,10 @@
         <hr>
         <a href="/recipes/{{.ID}}/edit" class="btn btn-small btn-outline-secondary mb-3">Edit Recipe</a>
         <div class="row">
-        {{range .SplitImagesN 4}}
+        {{range .ImagesSplitN 4}}
             <div class="col-md-3">
                 {{range .}}
-                <a href="{{.}}"><img class="w-100 mb-2" src="{{.}}"></a>
+                <a href="{{.Path}}"><img class="w-100 mb-2" src="{{.Path}}"></a>
                 {{end}}
             </div>
         {{end}}

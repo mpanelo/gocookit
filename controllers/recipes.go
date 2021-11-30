@@ -40,7 +40,7 @@ func NewRecipes(rs models.RecipeService, is models.ImageService, router *mux.Rou
 	}
 }
 
-func (rc *Recipes) UploadImages(rw http.ResponseWriter, r *http.Request) {
+func (rc *Recipes) ImageUpload(rw http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 
 	recipe, err := rc.getRecipe(rw, r)
@@ -82,6 +82,41 @@ func (rc *Recipes) UploadImages(rw http.ResponseWriter, r *http.Request) {
 
 	vd.SetSuccess("Images uploaded successfully")
 	rc.EditView.Render(rw, r, vd)
+}
+
+func (rc *Recipes) ImageDelete(rw http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	recipe, err := rc.getRecipe(rw, r)
+	if err != nil {
+		return
+	}
+
+	vd.Yield = recipe
+
+	user := context.User(r.Context())
+	if recipe.UserID != user.ID {
+		http.Error(rw, "Recipe not found", http.StatusNotFound)
+		return
+	}
+
+	err = rc.is.Delete(&models.Image{
+		RecipeID: recipe.ID,
+		Filename: mux.Vars(r)["filename"],
+	})
+
+	if err != nil {
+		vd.SetAlertDanger(err)
+		rc.EditView.Render(rw, r, vd)
+		return
+	}
+
+	url, err := rc.router.Get(RouteRecipeEdit).URL("id", fmt.Sprintf("%v", recipe.ID))
+	if err != nil {
+		http.Redirect(rw, r, "/recipes", http.StatusFound)
+		return
+	}
+	http.Redirect(rw, r, url.Path, http.StatusFound)
 }
 
 func (rc *Recipes) Show(rw http.ResponseWriter, r *http.Request) {

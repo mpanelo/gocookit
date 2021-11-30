@@ -72,6 +72,9 @@ func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
 		Handle("/recipes/{id:[0-9]+}", requireUserMw.ApplyFn(recipesCT.Update)).
 		Methods(http.MethodPost)
 	router.
-		Handle("/recipes/{id:[0-9]+}/images", requireUserMw.ApplyFn(recipesCT.UploadImages)).
+		Handle("/recipes/{id:[0-9]+}/images", requireUserMw.ApplyFn(recipesCT.ImageUpload)).
+		Methods(http.MethodPost)
+	router.
+		Handle("/recipes/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(recipesCT.ImageDelete)).
 		Methods(http.MethodPost)
 }

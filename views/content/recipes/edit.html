@@ -49,13 +49,20 @@
 
 {{define "uploadImageForm"}}
 <div class="row">
-    {{range .SplitImagesN 2}}
-        <div class="col-md-6">
-            {{range .}}
-            <a href="{{.}}"><img class="w-100 mb-2" src="{{.}}"></a>
-            {{end}}
+{{range .ImagesSplitN 2}}
+    <div class="col-md-6">
+    {{range .}}
+        <div class="card bg-dark text-white mb-2">
+            <img src="{{.Path}}" class="w-100 card-img">
+            <div class="card-img-overlay">
+                <form method="POST" action="/recipes/{{.RecipeID}}/images/{{.Filename}}/delete">
+                    <button type="submit" class="float-end btn btn-sm btn-danger">Delete</button>
+                </form>
+            </div>
         </div>
     {{end}}
+    </div>
+{{end}}
 </div>
 <div class="row">
     <form action="/recipes/{{.ID}}/images" method="POST" enctype="multipart/form-data">
