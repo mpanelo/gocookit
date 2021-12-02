@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/mpanelo/gocookit/controllers"
 	"github.com/mpanelo/gocookit/middleware"
 	"github.com/mpanelo/gocookit/models"
+	"github.com/mpanelo/gocookit/rand"
 )
 
 const (
@@ -41,8 +43,15 @@ func main() {
 	setUsersRoutes(router, usersCT)
 	setRecipesRoutes(router, recipesCT)
 
+	isProd := false // TODO update this to be a config variable
+	b, err := rand.Bytes(32)
+	if err != nil {
+		panic(err)
+	}
+	csrfMw := csrf.Protect(b, csrf.Secure(isProd))
+
 	userMw := middleware.User{UserService: services.User}
-	http.ListenAndServe(":8000", userMw.Apply(router))
+	http.ListenAndServe(":8000", csrfMw(userMw.Apply(router)))
 }
 
 func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {

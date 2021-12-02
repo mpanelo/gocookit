@@ -20,14 +20,14 @@ func RememberToken() (string, error) {
 }
 
 func generateRandString(nBytes int) (string, error) {
-	b, err := generateRandBytes(RememberTokenBytesLen)
+	b, err := Bytes(RememberTokenBytesLen)
 	if err != nil {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-func generateRandBytes(nBytes int) ([]byte, error) {
+func Bytes(nBytes int) ([]byte, error) {
 	b := make([]byte, nBytes)
 	_, err := rand.Read(b)
 	if err != nil {

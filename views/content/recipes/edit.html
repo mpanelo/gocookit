@@ -18,6 +18,7 @@
 
 {{define "updateRecipeForm"}}
 <form action="/recipes/{{.ID}}" method="POST">
+    {{csrfField}}
     <div class="mb-3">
         <label for="title" class="form-label">Title</label>
         <input type="text" class="form-control" id="title" name="title" value={{.Title}}>
@@ -56,6 +57,7 @@
             <img src="{{.Path}}" class="w-100 card-img">
             <div class="card-img-overlay">
                 <form method="POST" action="/recipes/{{.RecipeID}}/images/{{.Filename}}/delete">
+                    {{csrfField}}
                     <button type="submit" class="float-end btn btn-sm btn-danger">Delete</button>
                 </form>
             </div>
@@ -66,6 +68,7 @@
 </div>
 <div class="row">
     <form action="/recipes/{{.ID}}/images" method="POST" enctype="multipart/form-data">
+        {{csrfField}}
         <div class="mb-3">
             <label for="images" class="form-label">Images</label>
             <div class="input-group">

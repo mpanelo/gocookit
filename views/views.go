@@ -2,6 +2,7 @@ package views
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/gorilla/csrf"
 	"github.com/mpanelo/gocookit/context"
 )
 
@@ -26,7 +28,11 @@ func NewView(content string) *View {
 	files := getLayouts()
 	files = append(files, fmt.Sprintf("%s/%s%s", contentDir, content, fileExt))
 
-	t, err := template.ParseFiles(files...)
+	t, err := template.New("").Funcs(template.FuncMap{
+		"csrfField": func() (template.HTML, error) {
+			return "", errors.New("csrfField is not yet implemented")
+		},
+	}).ParseFiles(files...)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +69,14 @@ func (v *View) Render(rw http.ResponseWriter, r *http.Request, data interface{})
 
 	vd.User = context.User(r.Context())
 
-	err := v.template.ExecuteTemplate(&buf, "bootstrap", vd)
+	csrfField := csrf.TemplateField(r)
+	tpl := v.template.Funcs(template.FuncMap{
+		"csrfField": func() template.HTML {
+			return csrfField
+		},
+	})
+
+	err := tpl.ExecuteTemplate(&buf, "bootstrap", vd)
 	if err != nil {
 		log.Println(err)
 		http.Error(rw, AlertGenericMsg, http.StatusInternalServerError)

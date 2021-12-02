@@ -6,6 +6,7 @@
     <div class="row align-items-center">
         <div class="col-lg-4 offset-lg-4">
             <form action="/signin" method="POST" class="shadow p-4 border">
+                {{csrfField}}
                 <div class="mb-3">
                     <label for="email" class="form-label">Email address</label>
                     <input type="email" class="form-control" id="email" name="email">

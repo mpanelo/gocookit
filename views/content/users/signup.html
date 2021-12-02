@@ -6,6 +6,7 @@
     <div class="row align-items-center">
         <div class="col-lg-4 offset-lg-4">
             <form action="/users" method="POST" class="shadow p-4 border">
+                {{csrfField}}
                 <div class="mb-3">
                     <label for="name" class="form-label">Full name</label>
                     <input type="text" class="form-control" id="name" name="name">
