@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -113,6 +114,7 @@ func (rc *Recipes) ImageDelete(rw http.ResponseWriter, r *http.Request) {
 
 	url, err := rc.router.Get(RouteRecipeEdit).URL("id", fmt.Sprintf("%v", recipe.ID))
 	if err != nil {
+		log.Println(err)
 		http.Redirect(rw, r, "/recipes", http.StatusFound)
 		return
 	}
@@ -183,6 +185,7 @@ func (rc *Recipes) Create(rw http.ResponseWriter, r *http.Request) {
 
 	url, err := rc.router.Get(RouteRecipeEdit).URL("id", fmt.Sprintf("%v", recipe.ID))
 	if err != nil {
+		log.Println(err)
 		http.Redirect(rw, r, "/recipes", http.StatusFound)
 		return
 	}
@@ -248,6 +251,7 @@ func (rc *Recipes) Update(rw http.ResponseWriter, r *http.Request) {
 
 	url, err := rc.router.Get(RouteRecipeShow).URL("id", fmt.Sprintf("%v", recipe.ID))
 	if err != nil {
+		log.Println(err)
 		http.Redirect(rw, r, "/recipes", http.StatusFound)
 		return
 	}
@@ -260,6 +264,7 @@ func (rc *Recipes) getRecipe(rw http.ResponseWriter, r *http.Request) (*models.R
 
 	recipeID, err := strconv.Atoi(idStr)
 	if err != nil {
+		log.Println(err)
 		http.Error(rw, "Invalid recipe ID", http.StatusNotFound)
 		return nil, err
 	}
@@ -271,7 +276,8 @@ func (rc *Recipes) getRecipe(rw http.ResponseWriter, r *http.Request) (*models.R
 			return nil, err
 		}
 
-		http.Error(rw, "Unable to find recipe", http.StatusInternalServerError)
+		log.Println(err)
+		http.Error(rw, "Something went wrong when trying to find recipe", http.StatusInternalServerError)
 		return nil, err
 	}
 

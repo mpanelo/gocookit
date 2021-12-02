@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -64,6 +65,7 @@ func (v *View) Render(rw http.ResponseWriter, r *http.Request, data interface{})
 
 	err := v.template.ExecuteTemplate(&buf, "bootstrap", vd)
 	if err != nil {
+		log.Println(err)
 		http.Error(rw, AlertGenericMsg, http.StatusInternalServerError)
 		return
 	}

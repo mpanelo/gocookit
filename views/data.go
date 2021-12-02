@@ -1,6 +1,10 @@
 package views
 
-import "github.com/mpanelo/gocookit/models"
+import (
+	"log"
+
+	"github.com/mpanelo/gocookit/models"
+)
 
 const (
 	AlertLevelSuccess = "success"
@@ -26,11 +30,13 @@ func (d *Data) SetSuccess(msg string) {
 func (d *Data) SetAlertDanger(err error) {
 	d.Alert = &Alert{
 		Level: AlertLevelDanger,
-		Msg:   AlertGenericMsg,
 	}
 
 	if alerter, ok := err.(Alerter); ok {
 		d.Alert.Msg = alerter.Alert()
+	} else {
+		log.Println(err)
+		d.Alert.Msg = AlertGenericMsg
 	}
 }
 
