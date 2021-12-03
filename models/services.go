@@ -13,8 +13,8 @@ type Services struct {
 	db     *gorm.DB
 }
 
-func NewServices(dsn string) *Services {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+func NewServices(connInfo string) *Services {
+	db, err := gorm.Open(postgres.Open(connInfo), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {

@@ -12,16 +12,11 @@ import (
 	"github.com/mpanelo/gocookit/rand"
 )
 
-const (
-	host   = "localhost"
-	user   = "postgres"
-	dbname = "gocookit_dev"
-	port   = "5432"
-)
-
 func main() {
-	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable", host, user, dbname, port)
-	services := models.NewServices(dsn)
+	dbCfg := DefaultPostgresConfig()
+	cfg := DefaultConfig()
+
+	services := models.NewServices(dbCfg.ConnectionInfo())
 	defer services.Close()
 
 	services.AutoMigrate()
@@ -43,15 +38,17 @@ func main() {
 	setUsersRoutes(router, usersCT)
 	setRecipesRoutes(router, recipesCT)
 
-	isProd := false // TODO update this to be a config variable
 	b, err := rand.Bytes(32)
 	if err != nil {
 		panic(err)
 	}
-	csrfMw := csrf.Protect(b, csrf.Secure(isProd))
+	csrfMw := csrf.Protect(b, csrf.Secure(cfg.IsProd()))
 
 	userMw := middleware.User{UserService: services.User}
-	http.ListenAndServe(":8000", csrfMw(userMw.Apply(router)))
+
+	portStr := fmt.Sprintf(":%d", cfg.Port)
+	fmt.Printf("Starting gocookit on %s...\n", portStr)
+	http.ListenAndServe(portStr, csrfMw(userMw.Apply(router)))
 }
 
 func setUsersRoutes(router *mux.Router, usersCT *controllers.Users) {
