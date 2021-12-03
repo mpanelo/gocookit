@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/mpanelo/gocookit/context"
 	"github.com/mpanelo/gocookit/models"
@@ -17,6 +18,12 @@ func (u *User) Apply(next http.Handler) http.HandlerFunc {
 
 func (u *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if strings.HasPrefix(path, "/assets/") || strings.HasPrefix(path, "/images/") {
+			next(rw, r)
+			return
+		}
+
 		cookie, err := r.Cookie("remember_token")
 		if err != nil {
 			next(rw, r)
