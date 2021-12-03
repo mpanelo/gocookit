@@ -56,7 +56,7 @@
         <div class="card bg-dark text-white mb-2">
             <img src="{{.Path}}" class="w-100 card-img">
             <div class="card-img-overlay">
-                <form method="POST" action="/recipes/{{.RecipeID}}/images/{{.Filename}}/delete">
+                <form method="POST" action="/recipes/{{.RecipeID}}/images/{{.Filename | urlquery}}/delete">
                     {{csrfField}}
                     <button type="submit" class="float-end btn btn-sm btn-danger">Delete</button>
                 </form>
