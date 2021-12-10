@@ -16,16 +16,23 @@ func main() {
 	dbCfg := DefaultPostgresConfig()
 	cfg := DefaultConfig()
 
-	services := models.NewServices(dbCfg.ConnectionInfo())
-	defer services.Close()
+	services, err := models.NewServices(
+		models.WithGorm(dbCfg.ConnectionInfo()),
+		models.WithLogMode(!cfg.IsProd()),
+		models.WithUser(cfg.HMACKey, cfg.Pepper),
+		models.WithRecipe(),
+		models.WithImage(),
+	)
+	must(err)
 
+	defer services.Close()
 	services.AutoMigrate()
 
 	router := mux.NewRouter()
 
 	staticCT := controllers.NewStatic()
 	usersCT := controllers.NewUsers(services.User)
-	recipesCT := controllers.NewRecipes(services.Recipe, services.Images, router)
+	recipesCT := controllers.NewRecipes(services.Recipe, services.Image, router)
 
 	router.Handle("/", staticCT.Home)
 
@@ -39,9 +46,8 @@ func main() {
 	setRecipesRoutes(router, recipesCT)
 
 	b, err := rand.Bytes(32)
-	if err != nil {
-		panic(err)
-	}
+	must(err)
+
 	csrfMw := csrf.Protect(b, csrf.Secure(cfg.IsProd()))
 
 	userMw := middleware.User{UserService: services.User}
@@ -86,4 +92,10 @@ func setRecipesRoutes(router *mux.Router, recipesCT *controllers.Recipes) {
 	router.
 		Handle("/recipes/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(recipesCT.ImageDelete)).
 		Methods(http.MethodPost)
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

@@ -10,11 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	hmacSecretKey      = "secret" // TODO load from an environment variable
-	sharedSecretPepper = "pepper" // TODO load from an environment variable
-)
-
 type User struct {
 	gorm.Model
 	Name         string `gorm:"not null"`
@@ -32,15 +27,17 @@ type UserService interface {
 
 type userService struct {
 	UserDB
+	pepper string
 }
 
-func NewUserService(db *gorm.DB) UserService {
+func NewUserService(db *gorm.DB, hmacKey, pepper string) UserService {
 	return &userService{
-		&userValidator{
+		UserDB: &userValidator{
 			UserDB:     &userGorm{db},
-			hmac:       hash.NewHmac(hmacSecretKey),
+			hmac:       hash.NewHmac(hmacKey),
 			emailRegex: regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"),
 		},
+		pepper: pepper,
 	}
 }
 
@@ -53,7 +50,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 		return nil, err
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+sharedSecretPepper))
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+us.pepper))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return nil, ErrUserCredentialsInvalid
@@ -76,6 +73,7 @@ type userValidator struct {
 	UserDB
 	hmac       *hash.Hmac
 	emailRegex *regexp.Regexp
+	pepper     string
 }
 
 func (uv *userValidator) ByEmail(email string) (*User, error) {
@@ -168,7 +166,7 @@ func (uv *userValidator) generatePasswordHash(user *User) error {
 	if user.Password == "" {
 		return nil
 	}
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password+sharedSecretPepper), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password+uv.pepper), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
