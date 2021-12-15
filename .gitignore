@@ -1,2 +1,8 @@
 # Ignore recipe image files
 images/
+
+# Ignore binary
+gocookit
+
+# Ignore .config file
+.config
